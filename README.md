@@ -174,7 +174,7 @@ The command-line interface requires a single argument, which is the full
 path to a Chip 8 ROM. Run the following command in the directory where you 
 cloned or downloaded the source files:
 
-    python chip8/yac8e.py /path/to/rom/filename
+    python yac8e.py /path/to/rom/filename
 
 This will start the emulator with the specified ROM. Note that if you created 
 a virtual environment as detailed above, you will need to `workon` that 
@@ -187,7 +187,7 @@ environment before starting the emulator:
 The `-s` switch will scale the size of the window (the original size at 1x
 scale is 64 x 32):
 
-    python chip8/yac8e.py /path/to/rom/filename -s 10
+    python yac8e.py /path/to/rom/filename -s 10
 
 The command above will scale the window so that it is 10 times the normal
 size.
@@ -197,7 +197,7 @@ size.
 You may also wish to experiment with the `-d` switch, which instructs
 the emulator to add a delay to every operation that is executed. For example,
 
-    python chip8/yac8e.py /path/to/rom/filename -d 10
+    python yac8e.py /path/to/rom/filename -d 10
 
 The command above will add a 10 ms delay to every opcode that is executed.
 This is useful for very fast computers (note that it is difficult to find

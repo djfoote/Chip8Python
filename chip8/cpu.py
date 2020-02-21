@@ -4,14 +4,18 @@ This project uses an MIT style license - see LICENSE for details.
 
 A Chip 8 CPU - see the README file for more information.
 """
+from __future__ import absolute_import
 # I M P O R T S ###############################################################
 
+from builtins import range
+from builtins import object
 import pygame
 
 from pygame import key
 from random import randint
 
-from config import (
+from chip8.gamepad import gamepad_utils
+from chip8.config import (
     MAX_MEMORY, STACK_POINTER_START, KEY_MAPPINGS, PROGRAM_COUNTER_START
 )
 
@@ -32,7 +36,7 @@ class UnknownOpCodeException(Exception):
     A class to raise unknown op code exceptions.
     """
     def __init__(self, op_code):
-        Exception.__init__(self, "Unknown op-code: {:X}".format(op_code))
+        self.message = "Unknown op-code: {:X}".format(op_code)
 
 
 class Chip8CPU(object):
@@ -142,6 +146,8 @@ class Chip8CPU(object):
         self.reset()
         self.running = True
 
+        self.gamepad = gamepad_utils.Gamepad()
+
     def __str__(self):
         val = 'PC: {:4X}  OP: {:4X}\n'.format(
             self.registers['pc'] - 2, self.operand)
@@ -204,17 +210,24 @@ class Chip8CPU(object):
 
         key_to_check = self.registers['v'][source]
         keys_pressed = key.get_pressed()
+        if self.gamepad:
+            key_is_pressed = self.gamepad.is_key_pressed(key_to_check)
+        else:
+            key_is_pressed = keys_pressed[KEY_MAPPINGS[key_to_check]]
 
         # Skip if the key specified in the source register is pressed
         if operation == 0x9E:
-            if keys_pressed[KEY_MAPPINGS[key_to_check]]:
+            if key_is_pressed:
+                print(hex(key_to_check))
                 self.registers['pc'] += 2
 
         # Skip if the key specified in the source register is not pressed
         if operation == 0xA1:
-            if not keys_pressed[KEY_MAPPINGS[key_to_check]]:
+            if not key_is_pressed:
                 self.registers['pc'] += 2
-
+            else:
+                print(hex(key_to_check))
+                
     def misc_routines(self):
         """
         Will execute one of the routines specified in misc_routines.
@@ -667,14 +680,14 @@ class Chip8CPU(object):
         :param y_pos: the Y position of the sprite
         :param num_bytes: the number of bytes to draw
         """
-        for y_index in xrange(num_bytes):
+        for y_index in range(num_bytes):
 
             color_byte = bin(self.memory[self.registers['index'] + y_index])
             color_byte = color_byte[2:].zfill(8)
             y_coord = y_pos + y_index
             y_coord = y_coord % self.screen.get_height()
 
-            for x_index in xrange(8):
+            for x_index in range(8):
 
                 x_coord = x_pos + x_index
                 x_coord = x_coord % self.screen.get_width()
@@ -704,9 +717,9 @@ class Chip8CPU(object):
         :param y_pos: the Y position of the sprite
         :param num_bytes: the number of bytes to draw
         """
-        for y_index in xrange(num_bytes):
+        for y_index in range(num_bytes):
 
-            for x_byte in xrange(2):
+            for x_byte in range(2):
 
                 color_byte = bin(self.memory[self.registers['index'] + (y_index * 2) + x_byte])
                 color_byte = color_byte[2:].zfill(8)
@@ -757,16 +770,23 @@ class Chip8CPU(object):
                   unused    target     0         A
         """
         target = (self.operand & 0x0F00) >> 8
-        key_pressed = False
-        while not key_pressed:
-            event = pygame.event.wait()
-            if event.type == pygame.KEYDOWN:
-                keys_pressed = key.get_pressed()
-                for keyval, lookup_key in KEY_MAPPINGS.items():
-                    if keys_pressed[lookup_key]:
-                        self.registers['v'][target] = keyval
-                        key_pressed = True
-                        break
+
+        if self.gamepad:
+            keyval = self.gamepad.wait_for_keypress()
+        else:
+            key_pressed = False
+            while not key_pressed:
+                event = pygame.event.wait()
+                if event.type == pygame.KEYDOWN:
+                    keys_pressed = key.get_pressed()
+                    for keyval, lookup_key in list(KEY_MAPPINGS.items()):
+                        if keys_pressed[lookup_key]:
+                            key_pressed = True
+                            break
+
+        print(hex(keyval))
+        self.registers['v'][target] = keyval
+
 
     def move_reg_into_delay_timer(self):
         """

@@ -6,6 +6,8 @@ A simple Chip 8 emulator - see the README file for more information.
 """
 # I M P O R T S ###############################################################
 
+from builtins import str
+from builtins import range
 import mock
 import pygame
 import unittest
@@ -596,7 +598,7 @@ class TestChip8CPU(unittest.TestCase):
         self.assertEqual(0x202, self.cpu.registers['pc'])
 
     def test_execute_logical_instruction_raises_exception_on_unknown_op_codes(self):
-        for x in xrange(8, 14):
+        for x in range(8, 14):
             self.cpu.operand = x
             with self.assertRaises(UnknownOpCodeException):
                 self.cpu.execute_logical_instruction()

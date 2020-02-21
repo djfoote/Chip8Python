@@ -6,6 +6,7 @@ A simple Chip 8 emulator - see the README file for more information.
 """
 # I M P O R T S ###############################################################
 
+from builtins import range
 import unittest
 
 from chip8.screen import (
